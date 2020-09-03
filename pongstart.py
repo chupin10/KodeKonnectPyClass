@@ -23,6 +23,25 @@ class Paddle(pygame.Rect):
                 self.y += self.velocity
 
 
+class ComputerPaddle(pygame.Rect):
+    def __init__(self, velocity, up_key, down_key, *args, **kwargs):
+        self.velocity = velocity
+        self.up_key = up_key
+        self.down_key = down_key
+        super().__init__(*args, **kwargs)
+
+    def move_paddle(self, board_height, balls):
+        ball = balls[0]
+
+        if ball.y < self.y:
+            if self.y - self.velocity > 0:
+                self.y -= self.velocity
+
+        if ball.y >= self.y:
+            if self.y + self.velocity < board_height - self.height:
+                self.y += self.velocity
+
+
 class Ball(pygame.Rect):
     def __init__(self, velocity, *args, **kwargs):
         self.velocity = velocity
@@ -57,8 +76,9 @@ class Pong:
         # Create the player objects.
 
         self.paddles = []
+        self.ai_paddles = []
         self.balls = []
-        self.paddles.append(Paddle(  # The left paddle
+        self.ai_paddles.append(ComputerPaddle(  # The left paddle
             self.BALL_VELOCITY,
             pygame.K_w,
             pygame.K_s,
@@ -100,7 +120,7 @@ class Pong:
 
     def check_ball_hits_paddle(self):
         for ball in self.balls:
-            for paddle in self.paddles:
+            for paddle in [*self.paddles, *self.ai_paddles]:
                 if ball.colliderect(paddle):
                     ball.velocity = -ball.velocity
                     ball.angle = random.randint(-10, 10)
@@ -121,6 +141,10 @@ class Pong:
 
             for paddle in self.paddles:
                 paddle.move_paddle(self.HEIGHT)
+                pygame.draw.rect(self.screen, self.COLOUR, paddle)
+
+            for paddle in self.ai_paddles:
+                paddle.move_paddle(self.HEIGHT, self.balls)
                 pygame.draw.rect(self.screen, self.COLOUR, paddle)
 
             # We know we're not ending the game so lets move the ball here.
